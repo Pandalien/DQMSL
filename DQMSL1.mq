@@ -1,0 +1,479 @@
+If True Then 
+	Dim WORKING_DIR = "/storage/emulated/0/Docs/DQMSL/"
+	Dim IMG_TITLE = "Title"
+	Dim IMG_QUEST="Quests"
+	Dim IMG_ARENA = "Arena"	
+	Dim IMG_MISC = "MISC"
+	
+	Dim IMG_CONN = "Connecting"
+	Dim IMG_LOSE = "Battle_Lose"
+	Dim IMG_WIN = "Battle_Win"
+	
+	Dim IMG_BTN_OK = "Btn_OK"
+	Dim IMG_BTN_SKIP = "Btn_Skip"
+	Dim IMG_BTN_BACK = "Btn_Back"
+	Dim IMG_BTN_YES="Btn_Yes"
+	Dim IMG_BTN_YES2="Btn_Yes2"
+	Dim IMG_BTN_AI="Btn_AI"
+	Dim IMG_BTN_EXPAND="Btn_Expand"
+//Leauge Battle Images
+	Dim IMG_BTN_LEAGUEBATTLE="Btn_LeagueBattle"
+	Dim IMG_BTN_BATTLELITE="Btn_BATTLELITE"
+	Dim IMG_BTN_DOBATTLE="Btn_DoBattle"
+	Dim IMG_OPPONENT="Battle_opponent"
+	Dim IMG_BTN_START="Btn_StartBattle"
+	
+//Quest Images	
+	Dim IMG_BTN_NORMAL="Btn_QuestNormal"
+	Dim IMG_BTN_SPECIAL="Btn_QuestSpecial"
+	Dim IMG_BTN_FIRSTQUEST="Btn_FirstQuest"
+	Dim IMG_BTN_FIRSTQUESTSUB="Btn_FirstQuestSub"
+	Dim IMG_BTN_QUESTSELECT="Btn_QuestSelet"
+	Dim IMG_BTN_QUESTSELECTSUB="Btn_QuestSeletSub"
+	Dim IMG_QUESTSELECT="Quest_Select"
+	Dim IMG_FRIEND="Friend"
+	Dim IMG_POINTS="Points"
+	Dim IMG_BTN_VENTURE="Btn_VentureForth"
+	Dim IMG_EXP="EXP"
+	Dim IMG_BTN_AI_GREY="Btn_AIGrey"
+	Dim IMG_BTN_AI_DARK="Btn_AIDark"
+//	
+	Dim SCR_WIDTH = GetScreenX()
+	Dim SCR_LENGTH = GetScreenY()
+	Dim MID_X = SCR_WIDTH/2
+	Dim MID_Y = SCR_LENGTH/2
+	Dim T_CONN = 60
+	Dim T_Launch = 40
+	Dim T_Battle = 120
+	Dim INTERVAL = 500
+	Dim P_STROKE = 0.05
+	Dim FUZZ_LOW = 0.55
+	Dim FUZZ_HIGH = 0.8
+End If
+
+
+
+//login
+If Login() = false Then Goto EndOfMacro
+
+//If LeagueBattle() < 0 Then Goto EndOfMacro
+
+Test1()
+
+Rem EndOfMacro
+TracePrint "EndOfMacro"
+
+
+
+Function Test1()
+	Dim u = 0, l = 1, d = 2, r = 3, f = 4, treasure = 5, leave = 6, nextLevel
+	Dim procedure
+	//procedure2_2 = Array(l,u,f,u,u,u,u,f,r,d,r,f,u,u,leave)
+	procedure = Array(l, u, f, u, u, u, u, f, r, d, r, f, u, u, leave)
+	
+	TracePrint QuestRun(True, 2, 2, procedure)
+End Function
+
+
+
+Function Login
+	Login = False
+	Dim result = False
+	RunApp "com.garena.game.dqmsl"
+	Dim i = 0
+	TracePrint "Logging in"
+	
+	Do
+		i=i+1
+		Delay INTERVAL
+		If IconLookup(IMG_TITLE) = True Then 
+			ScreenTap
+		ElseIf IconLookup(IMG_ARENA) = True Then
+			result = True
+			Exit Do
+		Else 
+			IconTap(IMG_BTN_SKIP)
+		End If
+	Loop While i < T_CONN
+	//T_CONN
+	If result=True Then 
+		TracePrint "Login successful."
+		Login = True
+	Else 
+		TracePrint "Login failed"
+	End If
+	
+End Function
+
+Function LeagueBattle	
+	Dim result = -1
+	Dim i = 0
+	Dim names
+	LeagueBattle = -1	
+	
+	TracePrint "League Battle starting..."
+	names = Array(IMG_ARENA,IMG_BTN_LEAGUEBATTLE,IMG_BTN_BATTLELITE,IMG_BTN_DOBATTLE,IMG_OPPONENT,IMG_BTN_START,IMG_BTN_YES,IMG_BTN_AI)
+	
+	IconsWaitTap (names, False)
+	
+	TracePrint "Fighting..."
+	//Exit Function
+
+	//IconsTapUntilFound(names, IMG_ARENA)
+	Do
+		i = i + 1
+		Delay INTERVAL
+		If IconTap(IMG_LOSE) = True Then 
+			result = 0
+		ElseIf IconTap(IMG_WIN) = True Then
+			result = 1
+		ElseIf IconTap(IMG_BTN_OK) = True Then
+			TracePrint "OK button pressed, you received stuff"
+		ElseIf IconLookup(IMG_ARENA) = True Then
+			TracePrint "Battle ended."
+			Exit Do
+		Else 
+			ScreenTap
+		End If
+	Loop While i<T_Battle
+	
+	If result = 0 Then 
+		TracePrint "You lost the battle."
+	ElseIf result = 1 Then
+		TracePrint "You won the battle."
+	Else
+		TracePrint "Something went wrong!"
+	End If
+	
+	LeagueBattle = 	result
+End Function
+
+Function QuestRun(bNormalQuest, iLevel, iSublevel, procedure)
+	Dim result = -1
+	Dim i = 0
+	Dim j = 0
+	Dim names,exits
+	
+	QuestRun = False
+	If iLevel<1 Then iLevel=1
+	If iSublevel<1 Then iLevel=1
+	
+	TracePrint "Advanture starting..."
+
+	i=0
+	Do
+		i = i + 1
+		Delay INTERVAL
+		If IconTap(IMG_QUEST) = True Then 
+			TracePrint "Entering World Map..."
+		ElseIf IconLookup(IMG_QUESTSELECT) = True Then
+			Exit Do
+		ElseIf IconTap(IMG_BTN_BACK) = True Then
+			TracePrint "Back pressed."
+		End If
+	Loop While i<T_CONN
+		
+	TracePrint "Selecting quest..."
+	If bNormalQuest = True Then
+		If IconLookup(IMG_BTN_SPECIAL)=False Then
+			If IconTap(IMG_BTN_NORMAL)=False Then Exit Function
+		End If
+	Else
+		If IconLookup(IMG_BTN_NORMAL)=False Then
+			If IconTap(IMG_BTN_SPECIAL)=False Then Exit Function
+		End If
+	End If
+	//selecting level
+	i=0
+	Do
+		Delay 1000
+		i=i+1
+		If IconLookup(IMG_BTN_FIRSTQUEST)=False Then
+			ScreenSweepUp(P_STROKE)
+		Else
+			TracePrint "Found first one"
+			Exit Do
+		End If
+	Loop While i<T_CONN
+	If i=T_CONN Then Exit Function	
+	
+	TracePrint "Selecting quest..."
+	Delay 1500
+	For i=2 To iLevel
+		ScreenSweepDown(P_STROKE)
+		Delay 1500
+	Next
+	
+	IconWait(IMG_BTN_QUESTSELECT)
+	If IconTap(IMG_BTN_QUESTSELECT)=False Then Exit Function
+	
+	Do
+		Delay 1000
+		i=i+1
+		If IconLookup(IMG_BTN_FIRSTQUESTSUB)=False Then
+			ScreenSweepUp(P_STROKE)
+		Else
+			TracePrint "Found first one"
+			Exit Do
+		End If
+	Loop While i<T_CONN
+	If i=T_CONN Then Exit Function
+	
+	Delay 1500
+	For i=2 To iSublevel
+		ScreenSweepDown(P_STROKE)
+		Delay 1500
+	Next
+	
+	IconWait(IMG_BTN_QUESTSELECTSUB)
+	
+	names = Array(IMG_BTN_QUESTSELECTSUB,IMG_FRIEND,IMG_POINTS,IMG_BTN_YES,IMG_BTN_VENTURE,IMG_BTN_YES)
+	exits = Array(IMG_EXP)
+	If IconsTapUntilFound(names, exits, T_CONN * 8, False) = "" Then Exit Function
+	Delay 1000
+	
+	If Not actionsTake(procedure) Then Exit Function
+		
+	QuestRun = True
+End Function
+
+Function actionsTake(operations)
+    Dim u = 0, l = 1, d = 2, r = 3, f = 4, treasure = 5, leave = 6, nextLevel
+    Dim SwipeUPDown = 0.3
+    Dim SwipeLeftRight = 0.6
+    Dim icons,exits
+    actionsTake = False
+
+    For Each item In operations
+        Select Case item
+            Case u
+                ScreenSweepDown(SwipeUPDown)
+            Case l
+                ScreenSweepRight(SwipeLeftRight)
+            Case d
+                ScreenSweepUp(SwipeUPDown)
+            Case r
+                ScreenSweepLeft(SwipeLeftRight)
+            Case f
+                //icons = Array(IMG_BTN_AI, IMG_BTN_AI_GREY, IMG_BTN_AI_DARK)
+                icons = Array(IMG_BTN_AI)
+                exits = Array(IMG_EXP)
+            Case treasure
+                //IconsTapAll
+            Case leave
+                icons = Array(IMG_BTN_YES, IMG_BTN_YES2, IMG_BTN_OK)
+                exits = Array(IMG_ARENA,IMG_BTN_EXPAND)
+            Case nextLevel
+        End Select
+        
+        Select Case item
+        	Case f, leave
+        	If IconsTapUntilFound(icons, exits, T_Battle, True) = "" Then 
+                	Exit Function
+                End If
+        End Select
+        	
+        Delay 1200
+    Next
+	actionsTake = True
+End Function
+//---------------------------------------------------------------->
+
+
+
+Function IconLookup(name)
+    IconLookup = False
+    Dim path = "/storage/emulated/0/Docs/DQMSL/" & name & ".png"
+    Dim intX, intY
+    Dim fuzz = FUZZ_HIGH
+
+    If Dir.Exist(path) = 0 Then Exit Function
+    If name = IMG_BTN_OK Or name = IMG_BTN_YES Then fuzz = FUZZ_LOW
+
+    FindPic 0, 0, 0, 0, path, 000000, 0, fuzz, intX, intY
+    If intX > -1 And intY > -1 Then
+        IconLookup = True
+    End If
+
+End Function
+Function UBound(arr)
+    Dim a, i : i = 0
+    For Each a In arr
+        i = i + 1
+    Next
+    UBound = i - 1
+End Function
+
+Function IconsTapUntilFound(iconsToTap, iconsToExit, timer, bTaping)
+    Dim i = 0
+    Dim bTapped
+    //Dim count = UBound(iconsToTap)
+    //Dim timer = T_CONN * count
+    IconsTapUntilFound = ""
+
+    Do
+        i = i + 1
+        bTapped = False
+
+        For Each item In iconsToTap
+            If IconTap(item) = True Then
+                TracePrint(item & " was pressed.")
+                bTapped = True
+                Exit For
+            End If
+        Next
+
+        Delay INTERVAL
+
+        For Each item In iconsToExit
+            If IconLookup(item) Then
+                TracePrint(item & " was found & pressed.")
+                IconsTapUntilFound = item
+                Exit Do
+            End If
+        Next
+
+        If bTaping And Not bTapped Then ScreenTap()
+    Loop While i < timer
+
+End Function
+
+Function IconsLookupOr(names)
+	IconsLookupOr = False
+	For Each item In Names
+		If IconLookup(item) Then 
+			IconsLookupOr = True
+			Exit Function
+		End If
+	Next
+End Function
+
+Function IconsLookupAnd(names)
+	IconsLookupAnd = True
+	For Each item In Names
+		If Not IconLookup(item) Then 
+			IconsLookupOr = False
+			Exit Function
+		End If
+	Next
+End Function
+
+Function IconTap(name)
+	IconTap = False
+    Dim path = WORKING_DIR & name & ".png"
+    Dim intX,intY
+    Dim fuzz = FUZZ_HIGH
+
+    If Dir.Exist(path) = 0 Then Exit Function
+    If name = IMG_BTN_OK Or name = IMG_BTN_YES Then fuzz = FUZZ_LOW
+
+    FindPic 0, 0, 0, 0, path, 000000, 0, fuzz, intX, intY
+    If intX > -1 And intY > -1 Then
+		IconTap = true
+		Tap(intX,intY)
+	End If
+	
+End Function
+
+Function IconsTapOne(names)
+	IconsTapOne = False
+	For Each item In Names
+		If IconTap(item) Then 
+			IconsTapOne = True
+			Exit Function
+		End If
+	Next
+End Function
+
+Function IconWait(name)
+    Dim i = 0
+    IconWait = False
+
+    While i < T_CONN
+        i = i + 1
+        If IconLookup(name) = True Then
+            IconWait = True
+            Exit While
+        End If
+        Delay INTERVAL
+	Wend
+End Function
+
+Function IconWaitFor(name, secends)
+    Dim i = 0
+    IconWait = False
+    secends = secends * 2
+
+    While i < secends
+        i = i + 1
+        If IconLookup(name) = True Then
+            IconWait = True
+            Exit While
+        End If
+        Delay INTERVAL
+	Wend
+End Function
+
+Function IconWaitTap(name)
+	Dim i = 0
+	IconWaitTap = False
+	
+	While i < T_CONN
+		i=i+1
+		If IconTap(name) = True Then 
+			IconWaitTap = True
+			Exit While
+		End If
+        Delay INTERVAL
+	Wend
+End Function
+
+Function IconsWaitTap(names, allowSkipping)
+    Dim tapped = False
+    IconsWaitTap = False
+
+    For Each item In names
+        tapped = False
+
+        tapped = IconWaitTap(item)
+
+        If tapped = False And allowSkipping = False Then
+            Exit Function
+        End If
+    Next
+
+    IconsWaitTap = True
+End Function
+
+Sub ScreenTap
+	Tap(MID_X, MID_Y)
+End Sub
+
+Function ScreenSweepUp(percentage)
+	Dim sLen = SCR_LENGTH * percentage / 2.0
+	Dim y1 = MID_Y + sLen
+	Dim y2 = MID_Y - sLen	
+	Swipe(MID_X, y1, MID_X, y2)
+End Function
+
+Function ScreenSweepDown(percentage)
+	Dim sLen = SCR_LENGTH * percentage / 2.0
+	Dim y1 = MID_Y - sLen
+	Dim y2 = MID_Y + sLen	
+	Swipe(MID_X, y1, MID_X, y2)
+End Function
+
+Function ScreenSweepLeft(percentage)
+	Dim sLen = SCR_WIDTH * percentage / 2.0
+    Dim x1 = MID_X + sLen
+    Dim x2 = MID_X - sLen
+    Swipe(x1, MID_Y, x2, MID_Y)
+End Function
+
+Function ScreenSweepRight(percentage)
+	Dim sLen = SCR_WIDTH * percentage / 2.0
+    Dim x1 = MID_X - sLen
+    Dim x2 = MID_X + sLen
+    Swipe(x1, MID_Y, x2, MID_Y)
+End Function
+
